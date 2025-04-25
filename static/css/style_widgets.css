@@ -1,0 +1,19 @@
+h1.t1 {
+    margin-top: 3em;
+}
+
+a.widget-link {
+    text-decoration: none;
+}
+
+div.widget {
+    margin-top: 2em;
+    background-color: #5d5d5d;
+    color: #eeeeee;
+    padding: 2.2em;
+    border-radius: 1.2em;
+    transition: all 200ms ease-in-out;
+}
+div.widget:hover {
+    background-color: #535353;
+}

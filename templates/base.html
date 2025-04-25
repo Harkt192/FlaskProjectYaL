@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <title>{{ title }}</title>
+</head>
+<body>
+<header>
+    <nav class="nav_bar">
+        <div class="btn-group">
+            <a class="house" href="/">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house-fill" viewBox="0 0 16 16">
+                    <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z"/>
+                    <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293z"/>
+                </svg>
+            </a>
+            <form class="btn-form" action="/choosesite">
+                <button><b>Главная страница</b></button>
+            </form>
+            <form class="btn-form" action="/mysites">
+                <button><b>Мои Сайты</b></button>
+            </form>
+            <form class="btn-form" action="/feedback">
+                <button><b>Обратная связь</b></button>
+            </form>
+            <form class="btn-form" action="/about">
+                <button><b>О нас</b></button>
+            </form>
+            {# <form class="btn-form">#}
+            {# <button><b>Аккаунт</b></button>#}
+            {# </form>#}
+
+            {# Тут нужно будет еще вставить профиль пользователя #}
+            {# {% if current_user.is_authenticated %}
+            {#     <a class="navbar-brand pull-right" href="/logout">{{ current_user.name }}</a>
+            {# {% else %}
+            {# <p>
+            {#     <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
+            {#     <a class="btn btn-success" href="/login">Войти</a>
+            {# </p>
+            {# {% endif %}
+            {# <a class="navbar-brand pull-right" href="my_profile">
+            {#     <img src="/static/img/profile.png" width="30" height="30" alt="">
+            {# </a>#}
+        </div>
+    </nav>
+    <h1 style="margin-top: 1.5em"></h1>
+</header>
+
+<main role="main" class="container">
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>
