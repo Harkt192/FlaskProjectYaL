@@ -37,7 +37,6 @@ a.house:hover svg{
 }
 a.house:active {
     background-color: #535353;
-    color: #eeeeee;
 }
 a.house svg {
     width: 70%;
@@ -59,26 +58,71 @@ form.btn-form button {
     width: 100%;
     background-color: #999999;
     color: #000000;
+    font-size: 20px;
     border: none;
     outline: none;
     transition: all 200ms ease-in-out;
 }
 form.btn-form button:hover {
+    font-size: 21px;
     background-color: #5d5d5d;
     color: #eeeeee;
 }
 form.btn-form button:active {
-    background-color: #535353;
-    color: #eeeeee;
-}
-
-
-form.btn-form:hover button {
     font-size: 21px;
+    background-color: #535353;
 }
-button {
+
+a.profile {
+    text-decoration: none;
+    height: 100%;
+    width: 20%;
+    transition: all 200ms ease-in-out;
+}
+a.profile div {
+    height: 100%;
+    background-color: #999999;
+
+    display: flex;
+    justify-content: center;
+    vertical-align: top;
+    text-align: center;
+    transition: all 200ms ease-in-out;
+}
+a.profile svg {
+    height: 100%;
+    width: initial;
+    color: #000000;
+    transition: all 200ms ease-in-out;
+}
+p.login_text {
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: #999999;
+    color: #000000;
+    transition: all 200ms ease-in-out;
     font-size: 20px;
+}
+
+a.profile:hover div{
+    background-color: #5d5d5d;
+}
+a.profile:active div{
+    background-color: #535353;
+}
+a.profile:hover svg{
+    color: #eeeeee;
+    scale: 1.1;
+}
+
+a.profile:hover p{
+    background-color: #5d5d5d;
+    color: #eeeeee;
+    font-size: 21px;
+}
+a.profile:active p{
+    background-color: #535353;
+    font-size: 21px;
 }
