@@ -4,6 +4,7 @@ from data.users import User
 from data.users_files import User_files
 from forms.user import RegisterForm, LoginForm
 from flask_login import LoginManager, login_user, logout_user, login_required
+import os
 
 app = flask.Flask(__name__)
 
@@ -25,10 +26,14 @@ def reqister():
                                    form=form,
                                    message="Пароли не совпадают")
         db_sess = db_session.create_session()
+        if db_sess.query(User).filter(User.login == form.login.data).first():
+            return flask.render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Логин занят")
         if db_sess.query(User).filter(User.email == form.email.data).first():
             return flask.render_template('register.html', title='Регистрация',
                                    form=form,
-                                   message="Такой пользователь уже есть")
+                                   message="Уже существует пользователь с такой почтой")
 
         user = User(
             surname=form.surname.data,
@@ -48,6 +53,10 @@ def reqister():
         user_files.set_dir_name(form.login.data)
         db_sess.add(user_files)
         db_sess.commit()
+
+        dir_name = db_sess.query(User_files).filter(User_files.user_id == user.id).first().dir_name
+        os.mkdir(fr"./user_dirs/{dir_name}")
+
         return flask.redirect('/login')
     return flask.render_template('register.html', title='Регистрация', form=form)
 
@@ -58,6 +67,9 @@ def login():
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.email == form.email.data).first()
+
+        dir_name = db_sess.query(User_files).filter(User_files.user_id == User.id).first().dir_name
+        print(dir_name)
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return flask.redirect("/")
@@ -81,7 +93,7 @@ def profile():
 
 @app.route("/")
 def hello():
-    return flask.render_template("first_page.html", title="Welcome!")
+    return flask.render_template("first_page.html", title="Main page")
 
 
 @app.route("/choosesite")

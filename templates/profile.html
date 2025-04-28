@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Профиль пользователя {{ current_user.login }}</h1>
-    <h2>Фамилия: {{ current_user.surname }}</h2>
-    <h2>Имя: {{ current_user.name }}</h2>
-    <h2>Почта: {{ current_user.email }}</h2>
+    <h1><b>Профиль пользователя:</b> {{ current_user.login }}</h1>
+    <h2><b>Фамилия:</b> {{ current_user.surname }}</h2>
+    <h2><b>Имя:</b> {{ current_user.name }}</h2>
+    <h2><b>Почта:</b> {{ current_user.email }}</h2>
 
 {% endblock %}
