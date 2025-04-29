@@ -69,7 +69,6 @@ def login():
         user = db_sess.query(User).filter(User.email == form.email.data).first()
 
         dir_name = db_sess.query(User_files).filter(User_files.user_id == User.id).first().dir_name
-        print(dir_name)
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return flask.redirect("/")

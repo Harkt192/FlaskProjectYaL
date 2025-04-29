@@ -42,12 +42,12 @@
                         <p class="login_text"><b>{{ current_user.login }}</b></p>
                     </div>
                 </a>
-                <a class="navbar-brand pull-right" href="/logout">Выйти</a>
+                <a class="leave" href="/logout">Выйти</a>
             {% else %}
-                <p>
+                <div class="auth">
                     <a href="/register">Зарегистрироваться</a>
                     <a href="/login">Войти</a>
-                </p>
+                </div>
             {% endif %}
         </div>
     </nav>

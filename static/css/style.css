@@ -17,7 +17,6 @@ div.btn-group {
     align-items: center;
 }
 
-
 a.house {
     width: 5%;
     height: 100%;
@@ -46,7 +45,7 @@ a.house svg {
 
 
 form.btn-form {
-    width: 25%;
+    width: 20%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -75,8 +74,8 @@ form.btn-form button:active {
 
 a.profile {
     text-decoration: none;
+    width: 18%;
     height: 100%;
-    width: 20%;
     transition: all 200ms ease-in-out;
 }
 a.profile div {
@@ -125,4 +124,52 @@ a.profile:hover p{
 a.profile:active p{
     background-color: #535353;
     font-size: 21px;
+}
+
+a.leave {
+    height: 100%;
+    width: 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    background-color: #999999;
+    color: #000000;
+    font-size: 20px;
+    transition: all 200ms ease-in-out;
+}
+a.leave:hover {
+    background-color: #5d5d5d;
+    color: #f35d46;
+    font-size: 21px;
+}
+a.leave:active {
+    background-color: #535353;
+}
+
+div.auth {
+    width: 15%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #999999;
+}
+div.auth a {
+    width: 70%;
+    font-size: 20px;
+    border-radius: 1em;
+    text-decoration: none;
+    text-align: center;
+    background-color: #999999;
+    color: #000000;
+    transition: all 200ms ease-in-out;
+}
+div.auth a:hover {
+    background-color: #5d5d5d;
+    color: #eeeeee;
+}
+div.auth a:active {
+    background-color: #535353;
 }
