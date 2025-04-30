@@ -1,0 +1,82 @@
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            background-color: #FFFFFF;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 700px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border: 3px solid #452BFA;
+            border-radius: 30px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .bot-message {
+            background-color: #FFFFFF;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            border: 1px solid #000000;
+        }
+
+        .user-message {
+            background-color: #452BFA;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            margin-left: auto;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        #send-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #452BFA;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        #telegram-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid #000000;
+        }
