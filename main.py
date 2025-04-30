@@ -105,9 +105,22 @@ def mysites():
     return flask.render_template("mysites.html", title="My sites")
 
 
-@app.route("/feedback")
-def feedback():
-    return flask.render_template("feedback.html", title="Feedback")
+@app.route('/feedback', methods=['GET', 'POST'])
+def chat():
+    messages = []
+
+    if flask.request.method == 'POST':
+        user_message = flask.request.form.get('user_message')
+
+        if user_message:
+            messages.append({'sender': 'user', 'text': user_message})
+            if user_message == 'Привет':
+                bot_response = f"Здарова"
+            else:
+                bot_response = f'Я хз'
+            messages.append({'sender': 'bot', 'text': bot_response})
+
+    return flask.render_template('feedback.html', messages=messages)
 
 
 @app.route("/about")
