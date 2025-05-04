@@ -4,20 +4,55 @@ from data.users import User
 from data.users_files import User_files
 from forms.user import RegisterForm, LoginForm
 from flask_login import LoginManager, login_user, logout_user, login_required
+
+import webbrowser
+import subprocess
+import threading
+import signal
+import sys
 import os
 
-app = flask.Flask(__name__)
+master_app = flask.Flask(__name__)
 
-app.config["SECRET_KEY"] = "secret_key"
+master_app.config["SECRET_KEY"] = "secret_key"
 login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager.init_app(master_app)
+
+SERVER_PROCESS = None
+
+
+def exit_cleanup(signum, frame):
+    """Функция для корректного завершения второго сайта при выходе"""
+    global SERVER_PROCESS
+    if SERVER_PROCESS:
+        print("\nЗавершаем работу сайта...")
+        SERVER_PROCESS.terminate()
+        SERVER_PROCESS.wait()
+    sys.exit(0)
+
+
+# Обработчик выключения программы
+signal.signal(signal.SIGINT, exit_cleanup)  # Ctrl+C
+signal.signal(signal.SIGTERM, exit_cleanup)  # Kill
+
+
+def stop_site_in(delay):
+    def shutdown():
+        global SERVER_PROCESS
+        if SERVER_PROCESS:
+            SERVER_PROCESS.terminate()
+            SERVER_PROCESS = None
+            print("***САЙТ ВЫКЛЮЧЕН***")
+    timer = threading.Timer(delay, shutdown)
+    timer.start()
+
 
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
 
-@app.route('/register', methods=['GET', 'POST'])
+@master_app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
@@ -61,7 +96,7 @@ def reqister():
     return flask.render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@master_app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -78,61 +113,79 @@ def login():
     return flask.render_template('login.html', title='Авторизация', form=form)
 
 
-@app.route('/logout')
+@master_app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return flask.redirect("/")
 
 
-@app.route("/my_profile")
+@master_app.route("/my_profile")
 def profile():
     return flask.render_template("profile.html", title="Profile")
 
 
-@app.route("/")
+@master_app.route("/")
 def hello():
     return flask.render_template("first_page.html", title="Main page")
 
 
-@app.route("/choosesite")
+@master_app.route("/choosesite")
 def choose_site():
     return flask.render_template("choose_sites.html", title="Choose site")
 
 
-@app.route("/mysites")
+@master_app.route("/mysites")
 def mysites():
     return flask.render_template("mysites.html", title="My sites")
 
 
-@app.route("/feedback")
+@master_app.route("/feedback")
 def feedback():
     return flask.render_template("feedback.html", title="Feedback")
 
 
-@app.route("/about")
+@master_app.route("/about")
 def about():
     return flask.render_template("about.html", title="About us")
 
 
 # ---------
-@app.route("/sites/<int:num>")
+@master_app.route("/sites/<int:num>")
 def site_pages(num):
     if num == 1:
         return flask.render_template("site1.html", title="First site")
     elif num == 2:
         return flask.render_template("site2.html", title="Second site")
     elif num == 3:
-        return flask.render_template("site3.html", title="Third site")
+        return flask.render_template("site3.html", title="News site")
     elif num == 4:
         return flask.render_template("site4.html", title="Fourth site")
     elif num == 5:
         return flask.render_template("site5.html", title="Fifth site")
 
 
+@master_app.route("/site/<string:action>/<int:num>")
+def site_action_handler(action, num):
+    global SERVER_PROCESS
+    if action == "runsite":
+        if not SERVER_PROCESS:
+            path = fr"./sites/site{num}/site{num}_app.py"
+            SERVER_PROCESS = subprocess.Popen(["python", path])
+            stop_site_in(600)  # Принудительное выключение сайта через 10 минут.
+        webbrowser.open("http://127.0.0.1:5000/", new=1)
+    elif action == "closesite":
+        if SERVER_PROCESS:
+            os.kill(SERVER_PROCESS.pid, signal.SIGTERM)
+        SERVER_PROCESS = None
+    else:
+        flask.abort(404)
+    return flask.redirect(fr"/sites/{num}")
+
+
 def main():
     db_session.global_init("db/database.db")
-    app.run()
+    master_app.run(host="127.0.0.1", port=8888)
 
 
 main()

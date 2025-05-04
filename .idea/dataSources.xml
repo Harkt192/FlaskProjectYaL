@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="database" uuid="7986b5bd-d3ff-48d2-8363-8daa3aa469a7">
+    <data-source source="LOCAL" name="blogs" uuid="7d33896d-0f71-4789-b179-0e124cad350b">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:D:\Programms and data\Programms\FlaskProjectYaL\db\database.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:D:\Programms and data\Programms\FlaskProjectYaL\sites\site2\databases\blogs.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
       <libraries>
         <library>

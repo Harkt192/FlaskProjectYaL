@@ -2,11 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>{{ title }}</title>
     <link rel="stylesheet" href="../static/css/style.css">
-    <title>News Site</title>
 </head>
 <body>
-    <h1>Новости на сегодня:</h1>
-    <p>Новостей нет :(</p>
+    <div>
+        <div>
+            <h1 class="main_h1">Пробный сайт</h1>
+            {% if current_user.is_authenticated %}
+                <a class="profile" href="/my_profile">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                             class="bi bi-person-fill" viewBox="0 0 16 16">
+                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                        </svg>
+                        <p class="login_text"><b>{{ current_user.name }}</b></p>
+                    </div>
+                </a>
+                <a class="logout" href="/logout">Выйти</a>
+            {% else %}
+                <div>
+                    <a class="register" href="/register">Зарегистрироваться</a>
+                    <a class="login" href="/login">Войти</a>
+                </div>
+            {% endif %}
+        </div>
+        {% block content %}{% endblock %}
+    </div>
 </body>
 </html>

@@ -5,12 +5,10 @@
     <title>Main site</title>
 </head>
 <body>
-    <h1 style="color: red; text-align: center">ЧТО-ТО</h1>
-    <form action="/run_site">
-        <button onclick=window.open("http://127.0.0.1:5000/") target="_blank">Включить сайт</button>
-    </form>
-    <form action="/stop_site">
-        <button>Выключить сайт</button>
-    </form>
+    <div>
+        <h1 style="color: #b77301; text-align: center; font-size: 40px">ЧТО-ТО</h1>
+        <button style="margin-bottom: 1em" onclick="window.location.href='/start_site'" >Запустить/Открыть сайт</button>
+        <button onclick="window.location.href='/stop_site'">Выключить сайт</button>
+    </div>
 </body>
 </html>
