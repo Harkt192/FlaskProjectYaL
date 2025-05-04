@@ -8,6 +8,7 @@
           crossorigin="anonymous">
     <link rel="stylesheet" href="../static/css/style.css">
     <link rel="stylesheet" href="../static/css/sites.css">
+    <link rel="stylesheet" href="../static/css/feedback.css">
     <title>{{ title }}</title>
 </head>
 <body>
@@ -43,7 +44,7 @@
                         <p class="login_text"><b>{{ current_user.login }}</b></p>
                     </div>
                 </a>
-                <a class="leave" href="/user_logout">Выйти</a>
+                <a class="leave" href="/logout">Выйти</a>
             {% else %}
                 <div class="auth">
                     <a href="/register">Зарегистрироваться</a>

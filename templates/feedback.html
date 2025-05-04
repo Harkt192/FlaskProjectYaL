@@ -1,5 +1,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 style="margin-top: 2.5em">Страница с обратной связью/чат ботом.</h1>
+<div style="margin-top: 2.5em">
+    <h1>У тебя есть к нам<br/>
+        вопросы? Задай<br/>
+        их нашему боту</h1>
+
+    <h4>Если бот не смог помочь тебе решить<br/>
+        проблему или найти ответ на вопрос, тогда<br/>
+        напиши нам на горячую линию Telegram!</h4>
+
+    <button type="button" id="telegram-button">Свяжись тут!</button>
+</div>
+<div class="chat-container">
+    <div class="chat-messages">
+        {% for msg in messages %}
+        <div class="message {% if msg.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
+            {{ msg.text }}
+        </div>
+        {% endfor %}
+    </div>
+    <form method="POST" action="/feedback" class="chat-input">
+        <input type="text"
+               name="user_message"
+               id="user-input"
+               placeholder="Введите ваше сообщение..."
+               required>
+        <button type="submit" id="send-button">Отправить</button>
+    </form>
+</div>
 {% endblock %}
