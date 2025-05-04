@@ -14,7 +14,7 @@
         но вы можете предварительно завершить его работу.</p>
 
     {% if current_user.is_authenticated %}
-        <button class="site_button">Купить Сайт</button>
+        <button class="site_button" onclick="window.location.href='/site/buysite/3'">Купить Сайт</button>
     {% else %}
         <button class="disabled_site_button" disabled="disabled">Купить Сайт</button>
     {% endif %}

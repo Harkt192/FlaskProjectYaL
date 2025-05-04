@@ -1,5 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 style="margin-top: 2em">Страница с вашими сайтами,</br> тут будут расположены купленные сайты.</h1>
+    <link rel="stylesheet" href="../static/css/style_widgets.css">
+    {% if current_user.is_authenticated %}
+        <h1 style="margin-top: 2.5em">Мои Сайты</h1>
+        {% for project in projects %}
+            <div class="widget">
+                <h2>{{ project.id }} {{ project.name }}</h2>
+                <div>
+                    {{ project.about }}
+                </div>
+                <div>
+                    Дата создания: {{ project.start_time }}, {{ login }}
+                </div>
+                {% if project.is_finished == false %}
+                    <p>Проект в стадии разработки.</p>
+                {% else %}
+                    <p>Проект завершен.</p>
+                {% endif %}
+                <div>
+                    <button class="mysite_button"
+                            onclick="window.location.href='/site/runsite/{{ project.name }}' ">
+                        Запустить Сайт
+                    </button>
+                    <button class="mysite_button" onclick="window.location.href='/site/closesite/{{ project.name }}' ">
+                        Закрыть Сайт
+                    </button>
+                    <button class="disabled_mysite_button">
+                        Скачать Файлы сайта
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <h1 style="margin-top: 2.5em">Авторизуйтесь, чтобы просмотреть свои сайты.</h1>
+    {% endif %}
 {% endblock %}

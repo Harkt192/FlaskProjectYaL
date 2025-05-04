@@ -1,5 +1,5 @@
 h1.t1 {
-    margin-top: 3em;
+    margin-top: 2.5em;
 }
 
 a.widget-link {
@@ -16,4 +16,33 @@ div.widget {
 }
 div.widget:hover {
     background-color: #535353;
+}
+
+
+button.mysite_button {
+    font-size: 24px;
+    border-radius: 1em;
+    padding: 0.2em 1em 0.2em 1em;
+    margin-right: 0.5em;
+    background-color: #999999;
+    border: medium solid black;
+    color: black;
+    transition: all 200ms ease-in-out;
+}
+button.mysite_button:hover {
+    background-color: #3b3b3b;
+    color: #eeeeee;
+}
+button.mysite_button:active {
+    background-color: #141414;
+}
+
+button.disabled_mysite_button {
+    font-size: 23px;
+    border-radius: 1em;
+    padding: 0.2em 1em 0.2em 1em;
+    margin-right: 0.5em;
+    background-color: #aaaaaa;
+    border: medium solid black;
+    color: #343434;
 }

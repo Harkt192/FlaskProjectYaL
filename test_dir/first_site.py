@@ -48,7 +48,7 @@ def main_page():
 def run_site():
     global server_process
     if not server_process:
-        server_process = subprocess.Popen(["python", "../sites/site3/site3_app.py"])
+        server_process = subprocess.Popen(["python", "../sites/site3/site_app.py"])
         stop_second_site_after(10)
     webbrowser.open("http://127.0.0.1:5000/", new=1)
     return flask.redirect("/")

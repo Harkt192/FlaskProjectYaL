@@ -10,9 +10,8 @@ __factory = None
 def global_init(db_file):
     global __factory
 
-    # if __factory:
-    #     return
-
+    if __factory:
+        return
     if not db_file or not db_file.strip():
         raise Exception("Необходимо указать файл базы данных.")
 
@@ -25,8 +24,10 @@ def global_init(db_file):
     from . import __all_models
 
     SqlAlchemyBase.metadata.create_all(engine)
+    print("***УСПЕШНО***")
 
 
 def create_session() -> Session:
     global __factory
+    print("***СЕССИЯ***")
     return __factory()

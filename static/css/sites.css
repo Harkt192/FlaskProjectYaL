@@ -21,13 +21,14 @@ p.explanation {
 }
 
 button.site_button {
-    font-size: 23px;
+    font-size: 24px;
     border-radius: 1em;
     padding: 0.2em 1em 0.2em 1em;
     margin-right: 0.5em;
     background-color: #999999;
-    border: none;
     color: black;
+    border: none;
+    outline: none;
     transition: all 200ms ease-in-out;
 }
 button.site_button:hover {
@@ -47,3 +48,4 @@ button.disabled_site_button {
     border: none;
     color: #343434;
 }
+
