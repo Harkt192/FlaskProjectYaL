@@ -104,9 +104,10 @@ def choose_site():
 def mysites():
     return flask.render_template("mysites.html", title="My sites")
 
-
+counter = 0
 @app.route('/feedback', methods=['GET', 'POST'])
 def chat():
+    global counter
     messages = []
 
     if flask.request.method == 'POST':
@@ -114,11 +115,12 @@ def chat():
 
         if user_message:
             messages.append({'sender': 'user', 'text': user_message})
-            if user_message == 'Привет':
-                bot_response = f"Здарова"
+            if counter == 0:
+                bot_response = f"Здравствуй! Чем могу быть полезен?"
             else:
-                bot_response = f'Я хз'
+                bot_response = f'Не могу помочь'
             messages.append({'sender': 'bot', 'text': bot_response})
+        counter += 1
 
     return flask.render_template('feedback.html', messages=messages)
 
@@ -127,6 +129,30 @@ def chat():
 def about():
     return flask.render_template("about.html", title="About us")
 
+
+all_temp = ["template_1", "template_2", "template_3"]
+cart_list = ["template_1", "template_2"]
+
+@app.route("/cart", methods=['GET', 'POST'])
+def show_templates():
+    global cart_list
+    if flask.request.method == 'POST':
+        action = flask.request.form.get('action')
+
+        if action and action.startswith('remove_'):
+            template_to_remove = action.replace('remove_', '')
+            if template_to_remove in cart_list:
+                cart_list.remove(template_to_remove)
+            return flask.redirect('/cart')
+
+        elif action == 'buy':
+            return flask.redirect('/mysites')
+
+        elif action == 'back':
+            return flask.redirect('/choosesite')
+
+    filtered_templates = [t for t in all_temp if t in cart_list]
+    return flask.render_template("cart.html", templates=filtered_templates, cart_list_len=len(cart_list))
 
 # ---------
 @app.route("/sites/<int:num>")

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+<h1>Корзина</h1>
+
+{% if cart_list_len == 0 %}
+<p>Ваша корзина пуста</p>
+{% endif %}
+
+{% for template_name in templates %}
+<div class="template-box">
+    <form method="POST" action="/cart" style="display: inline;">
+        <button type="submit" name="action" value="remove_{{ template_name }}" class="delete-btn">×</button>
+    </form>
+    {% include template_name + ".html" %}
+</div>
+{% endfor %}
+
+<div class="buttons-container">
+    <form method="POST" action="/cart">
+        <button type="submit" name="action" value="buy">Оплатить</button>
+        <button type="submit" name="action" value="back">Вернуться</button>
+    </form>
+</div>
+</body>
+{% endblock %}
