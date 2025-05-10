@@ -3,11 +3,12 @@
 {% block content %}
     <link rel="stylesheet" href="../static/css/style_widgets.css">
     {% if current_user.is_authenticated %}
-        <h1 style="margin-top: 2.5em">Мои Сайты</h1>
+        <h1>Мои Сайты</h1>
         {% for project in projects %}
             <div class="widget">
                 <h2>{{ project.id }} {{ project.name }}</h2>
                 <div>
+                    Тип: {{ project.type }}<br>
                     {{ project.about }}
                 </div>
                 <div>
@@ -33,6 +34,6 @@
             </div>
         {% endfor %}
     {% else %}
-        <h1 style="margin-top: 2.5em">Авторизуйтесь, чтобы просмотреть свои сайты.</h1>
+        <h1>Авторизуйтесь, чтобы просмотреть свои сайты.</h1>
     {% endif %}
 {% endblock %}

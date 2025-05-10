@@ -44,7 +44,7 @@
                         <p class="login_text"><b>{{ current_user.login }}</b></p>
                     </div>
                 </a>
-                <a class="leave" href="/logout">Выйти</a>
+                <a class="leave" href="/user_logout">Выйти</a>
             {% else %}
                 <div class="auth">
                     <a href="/register">Зарегистрироваться</a>
@@ -53,10 +53,10 @@
             {% endif %}
         </div>
     </nav>
-    <h1 style="margin-top: 1.7em"></h1>
 </header>
 
 <main role="main" class="container">
+    <h1 style="margin-bottom: 1em">asd</h1>
     {% block content %}{% endblock %}
 </main>
 </body>

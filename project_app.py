@@ -22,33 +22,51 @@ master_app.config["SECRET_KEY"] = "secret_key"
 login_manager = LoginManager()
 login_manager.init_app(master_app)
 
-SERVER_PROCESS = None
+ALL_PORTS = {port: "free" for port in range(1111, 10000)}
+FREE_PORTS = [port for port in range(1111, 10000)]
 
 
-def exit_cleanup(signum, frame):
-    """Функция для корректного завершения второго сайта при выходе"""
+def get_available_port() -> int:
+    global FREE_PORTS, ALL_PORTS
+    if FREE_PORTS:
+        port = FREE_PORTS[-1]
+        FREE_PORTS = FREE_PORTS[:-1]
+        ALL_PORTS[port] = "is-used"
+        return port
+    return -1
+
+
+def make_free_port(port: int):
+    global FREE_PORTS, ALL_PORTS
+    ALL_PORTS[port] = "free"
+    FREE_PORTS.append(port)
+
+
+SERVER_PROCESS = {
+    "site1": None,
+    "site2": None,
+    "site3": None,
+    "site4": None,
+    "site5": None
+}
+
+
+def exit_cleanup(*args):
+    """Функция для корректного завершения шаблонных сайтов при выходе"""
     global SERVER_PROCESS
-    if SERVER_PROCESS:
-        print("\nЗавершаем работу сайта...")
-        SERVER_PROCESS.terminate()
-        SERVER_PROCESS.wait()
+    for name, data in SERVER_PROCESS.items():
+        if data:
+            port, process = data["port"], data["process"]
+            make_free_port(port)
+            kill_process(name)
+            print(f"***ЗАВЕРШАЕМ РАБОТУ САЙТА: {name} ***")
+    print("\nПРОВЕРКА ПРОЦЕССОВ:", SERVER_PROCESS)
     sys.exit(0)
 
 
 # Обработчик выключения программы
 signal.signal(signal.SIGINT, exit_cleanup)  # Ctrl+C
 signal.signal(signal.SIGTERM, exit_cleanup)  # Kill
-
-
-def stop_site_in(delay):
-    def shutdown():
-        global SERVER_PROCESS
-        if SERVER_PROCESS:
-            SERVER_PROCESS.terminate()
-            SERVER_PROCESS = None
-            print("***САЙТ ВЫКЛЮЧЕН***")
-    timer = threading.Timer(delay, shutdown)
-    timer.start()
 
 
 @login_manager.user_loader
@@ -184,59 +202,85 @@ def site_pages(num):
         return flask.render_template("site5.html", title="Fifth site")
 
 
-def kill_process():
+def kill_process(name_project: str):
     global SERVER_PROCESS
-    if SERVER_PROCESS:
-        os.kill(SERVER_PROCESS.pid, signal.SIGTERM)
-    SERVER_PROCESS = None
+    if name_project.isdigit():
+        name_project = "site" + name_project
+    # Выключение сайта
+    if SERVER_PROCESS[name_project]:
+        make_free_port(SERVER_PROCESS[name_project]["port"])
+        os.kill(SERVER_PROCESS[name_project]["process"].pid, signal.SIGTERM)
+
+    SERVER_PROCESS[name_project] = None
+    if name_project not in ["site1", "site2", "site3", "site4", "site5"]:
+        SERVER_PROCESS.pop(name_project)
 
 
-@master_app.route("/site/<string:action>/<string:num>")
-def site_action_handler(action, num):
+def stop_site_in(name_project: str, time=60):
+    def shutdown():
+        global SERVER_PROCESS
+        kill_process(name_project)
+        print(f"***САЙТ ВЫКЛЮЧЕН ПО ИСТЕЧЕНИЮ {time} СЕКУНД***")
+    timer = threading.Timer(time, shutdown)
+    timer.start()
+
+
+@master_app.route("/site/<string:action>/<string:arg>")
+def site_action_handler(action: str, arg: str):
     global SERVER_PROCESS
     if action == "runsite":
-        if num.isdigit():
-            print(num)
-            path = fr"./sites/site{num}/site_app.py"
+        if arg.isdigit():
+            name_project = "site" + arg
+            path = f"./sites/site{arg}/site_app.py"
         else:
-            path = fr"./user_dirs/{current_user.login}_dir/{num}/site_app.py"
-        if SERVER_PROCESS:
-            kill_process()
+            name_project = arg
+            path = f"./user_dirs/{current_user.login}_dir/{arg}/site_app.py"
 
-        SERVER_PROCESS = subprocess.Popen(["python", path])
-        stop_site_in(600)  # Принудительное выключение сайта через 10 минут.
-        webbrowser.open("http://127.0.0.1:5000/", new=1)
+        if name_project in SERVER_PROCESS and SERVER_PROCESS[name_project]:
+            kill_process(arg)
+
+        available_port = get_available_port()
+        SERVER_PROCESS[name_project] = {
+            "process": subprocess.Popen(["python", path, f"--port={available_port}"]),
+            "port": available_port
+        }
+        stop_site_in(arg, time=600)  # Принудительное выключение сайта через 10 минут.
+        webbrowser.open(f"http://127.0.0.1:{available_port}/", new=1)
+
     elif action == "closesite":
-        kill_process()
+        kill_process(arg)
+
     elif action == "buysite":
+        arg = int(arg)
         print(current_user.login)
         db_session.global_init(fr"user_dirs/{current_user.login}_dir/projects.db")
         db_sess = db_session.create_session()
         names = [
-            "Site for Selling", "Forum Site", "News Site", "Gaming Site"
+            "Site_for_Selling", "Forum_Site", "News_Site", "Gaming_Site", "Blog_Site"
         ]
         abouts = [
             "Этот сайт предназначен для продажи чего-либо.",
             "Форум Сайт, на этом сайте пользователи смогут обсуждать любые вопросы.",
             "Новостной Сайт, на нем можно публиковать любые новости.",
             "Игровой Сайт, на нем можно сделать любую игру",
-            "",
+            "Сайт для блога, благодаря этому сайту вы сможете быть ближе к своей аудитории"
         ]
-        name_ = names[num - 1] + "(1)"
-        about_ = abouts[num - 1]
+        name_ = names[arg - 1] + "(1)"
+        about_ = abouts[arg - 1]
         k = 1
         projects = db_sess.query(Project).filter(Project.name.like(f"{name_}%"))
         while name_ in projects:
             k += 1
-            name_ = names[num - 1] + f"({k})"
+            name_ = names[arg - 1] + f"({k})"
         project = Project(
             name=name_,
-            about=about_
+            about=about_,
+            type=names[arg - 1]
         )
         db_sess.add(project)
         db_sess.commit()
         shutil.copytree(
-            fr"sites/site{num}",
+            fr"sites/site{arg}",
             fr"user_dirs/{current_user.login}_dir/{name_}"
         )
 
@@ -248,13 +292,13 @@ def site_action_handler(action, num):
         return flask.redirect("/mysites")
     else:
         flask.abort(404)
-    if num.isdigit():
-        return flask.redirect(f"/sites/{num}")
+    if arg.isdigit():
+        return flask.redirect(f"/sites/{arg}")
     else:
         return flask.redirect("/mysites")
 
 
-def make_reserve_arc(source, dest):
+def make_reserve_arc(source: str, dest: str):
     name = source.split("/")[-1]
     left_part = "/".join(source.split("/")[:-1])
     archive_name = f"{name}.zip"

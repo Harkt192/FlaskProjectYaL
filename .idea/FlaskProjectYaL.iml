@@ -12,7 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/user_dirs" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.12 (flask_pr_main)" jdkType="Python SDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TemplatesService">

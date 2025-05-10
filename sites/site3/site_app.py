@@ -5,13 +5,28 @@ from data.news import News
 from forms.user import RegisterForm, LoginForm
 from forms.news import NewsForm
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+import argparse
 import os
 
-app = flask.Flask(__name__)
+site_app = flask.Flask(__name__)
 
-app.config["SECRET_KEY"] = "secret_key"
+site_app.config["SECRET_KEY"] = "secret_key"
 login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager.init_app(site_app)
+
+
+def get_port() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", nargs=1, type=int, dest="port")
+
+    args = parser.parse_args()
+    port = args.port[0]
+    print(port)
+    return port
+
+
+HOST = "127.0.0.1"
+PORT = get_port()
 
 
 @login_manager.user_loader
@@ -20,14 +35,14 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
-@app.route('/logout')
+@site_app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return flask.redirect("/")
 
 
-@app.route("/")
+@site_app.route("/")
 def index():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
@@ -37,7 +52,7 @@ def index():
     return flask.render_template("index.html", news=news)
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@site_app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -52,7 +67,7 @@ def login():
     return flask.render_template('login.html', title='Авторизация', form=form)
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@site_app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
@@ -77,7 +92,7 @@ def reqister():
     return flask.render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/news',  methods=['GET', 'POST'])
+@site_app.route('/news', methods=['GET', 'POST'])
 @login_required
 def add_news():
     form = NewsForm()
@@ -95,7 +110,7 @@ def add_news():
                            form=form)
 
 
-@app.route('/news/<int:id>', methods=['GET', 'POST'])
+@site_app.route('/news/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
     form = NewsForm()
@@ -135,7 +150,7 @@ def main():
         db_session.global_init("./sites/site3/databases/blogs.db")
     else:
         db_session.global_init("../sites/site3/databases/blogs.db")
-    app.run(host="127.0.0.1", port=5000)
+    site_app.run(host=HOST, port=PORT)
 
 
 main()

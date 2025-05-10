@@ -10,6 +10,7 @@ class Project(SqlAlchemyBase, UserMixin):
     __tablename__ = "projects"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    type = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     name = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=True)
     about = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     is_finished = sqlalchemy.Column(sqlalchemy.BOOLEAN, default=False)

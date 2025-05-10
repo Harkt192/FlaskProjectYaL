@@ -5,10 +5,24 @@
 #     dir_name += str(ord(letter)).ljust(5, "0")
 # print(dir_name)
 
-from werkzeug.security import generate_password_hash, check_password_hash
+# from werkzeug.security import generate_password_hash, check_password_hash
+#
+# a = generate_password_hash("RASDWAEWQ231" * 3000)
+# b = "RASDWAEWQ231" * 3000
+# print(a, b, sep="\n")
+# print(a == b)
+# print(check_password_hash(a, b))
 
-a = generate_password_hash("RASDWAEWQ231" * 3000)
-b = "RASDWAEWQ231" * 3000
-print(a, b, sep="\n")
-print(a == b)
-print(check_password_hash(a, b))
+# a = "31221o3"
+# print(a.isdigit())
+
+d = {
+    "a": 14,
+    "b": 24,
+    "c": 15,
+    "d": 32
+}
+print(d)
+
+a = d.pop("d")
+print(d, a)
