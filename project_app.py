@@ -25,6 +25,10 @@ login_manager.init_app(master_app)
 ALL_PORTS = {port: "free" for port in range(1111, 10000)}
 FREE_PORTS = [port for port in range(1111, 10000)]
 
+### 8888 - основной порт ###
+ALL_PORTS.pop(8888)
+FREE_PORTS.remove(8888)
+
 
 def get_available_port() -> int:
     global FREE_PORTS, ALL_PORTS
@@ -38,6 +42,7 @@ def get_available_port() -> int:
 
 def make_free_port(port: int):
     global FREE_PORTS, ALL_PORTS
+    print(f"ПОРТ {port} СВОБОДЕН")
     ALL_PORTS[port] = "free"
     FREE_PORTS.append(port)
 
@@ -104,10 +109,9 @@ def reqister():
         db_sess.commit()
         user_files = User_files(
             num_projects=0,
-            dir_name=form.login.data,
+            dir_name=form.login.data + "_dir",
             user_id=user.id
         )
-        user_files.set_dir_name(form.login.data)
         db_sess.add(user_files)
         db_sess.commit()
 
@@ -207,7 +211,7 @@ def kill_process(name_project: str):
     if name_project.isdigit():
         name_project = "site" + name_project
     # Выключение сайта
-    if SERVER_PROCESS[name_project]:
+    if name_project in SERVER_PROCESS and SERVER_PROCESS[name_project]:
         make_free_port(SERVER_PROCESS[name_project]["port"])
         os.kill(SERVER_PROCESS[name_project]["process"].pid, signal.SIGTERM)
 
@@ -233,26 +237,34 @@ def site_action_handler(action: str, arg: str):
             name_project = "site" + arg
             path = f"./sites/site{arg}/site_app.py"
         else:
-            name_project = arg
+            name_project = f"{current_user.login}_{arg}"
             path = f"./user_dirs/{current_user.login}_dir/{arg}/site_app.py"
 
         if name_project in SERVER_PROCESS and SERVER_PROCESS[name_project]:
-            kill_process(arg)
-
-        available_port = get_available_port()
-        SERVER_PROCESS[name_project] = {
-            "process": subprocess.Popen(["python", path, f"--port={available_port}"]),
-            "port": available_port
-        }
-        stop_site_in(arg, time=600)  # Принудительное выключение сайта через 10 минут.
-        webbrowser.open(f"http://127.0.0.1:{available_port}/", new=1)
+            webbrowser.open(f"http://127.0.0.1:{SERVER_PROCESS[name_project]["port"]}/", new=1)
+        else:
+            available_port = get_available_port()
+            if available_port != -1:
+                SERVER_PROCESS[name_project] = {
+                    "process": subprocess.Popen([
+                        "python",
+                        path,
+                        f"--port={available_port}",
+                        f"--user-login={current_user.login}"
+                    ]),
+                    "port": available_port,
+                    "user": current_user.login
+                }
+                stop_site_in(arg, time=600)  # Принудительное выключение сайта через 10 минут.
+                webbrowser.open(f"http://127.0.0.1:{available_port}/", new=1)
+            else:
+                return flask.render_template("no_servers.html", title="Error")
 
     elif action == "closesite":
         kill_process(arg)
 
     elif action == "buysite":
         arg = int(arg)
-        print(current_user.login)
         db_session.global_init(fr"user_dirs/{current_user.login}_dir/projects.db")
         db_sess = db_session.create_session()
         names = [
@@ -279,15 +291,16 @@ def site_action_handler(action: str, arg: str):
         )
         db_sess.add(project)
         db_sess.commit()
+
         shutil.copytree(
             fr"sites/site{arg}",
             fr"user_dirs/{current_user.login}_dir/{name_}"
         )
-
         make_reserve_arc(
             fr"user_dirs/{current_user.login}_dir/{name_}",
             fr"user_dirs/{current_user.login}_dir/{name_}"
         )
+
         db_session.global_init("db/database.db")
         return flask.redirect("/mysites")
     else:

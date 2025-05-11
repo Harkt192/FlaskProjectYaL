@@ -1,4 +1,5 @@
 import flask
+
 from data import db_session
 from data.users import User
 from data.news import News
@@ -15,18 +16,19 @@ login_manager = LoginManager()
 login_manager.init_app(site_app)
 
 
-def get_port() -> int:
+def get_args() -> tuple:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", nargs=1, type=int, dest="port")
+    parser.add_argument("--user-login", nargs=1, type=str, dest="user_login")
 
     args = parser.parse_args()
-    port = args.port[0]
-    print(port)
-    return port
+    port = args["port"]
+    user_login = args["user_login"]
+    return port, user_login
 
 
 HOST = "127.0.0.1"
-PORT = get_port()
+PORT, USER_LOGIN = get_args()
 
 
 @login_manager.user_loader
@@ -35,7 +37,7 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
-@site_app.route('/logout')
+@site_app.route(f'{USER_LOGIN}/logout')
 @login_required
 def logout():
     logout_user()
@@ -43,6 +45,11 @@ def logout():
 
 
 @site_app.route("/")
+def redirect_page():
+    return flask.redirect(f"{USER_LOGIN}/")
+
+
+@site_app.route(f"{USER_LOGIN}/")
 def index():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
@@ -52,7 +59,7 @@ def index():
     return flask.render_template("index.html", news=news)
 
 
-@site_app.route('/login', methods=['GET', 'POST'])
+@site_app.route(f'{USER_LOGIN}/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -67,7 +74,7 @@ def login():
     return flask.render_template('login.html', title='Авторизация', form=form)
 
 
-@site_app.route('/register', methods=['GET', 'POST'])
+@site_app.route(f'{USER_LOGIN}/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
@@ -92,7 +99,7 @@ def reqister():
     return flask.render_template('register.html', title='Регистрация', form=form)
 
 
-@site_app.route('/news', methods=['GET', 'POST'])
+@site_app.route(f'{USER_LOGIN}/news', methods=['GET', 'POST'])
 @login_required
 def add_news():
     form = NewsForm()
@@ -110,7 +117,7 @@ def add_news():
                            form=form)
 
 
-@site_app.route('/news/<int:id>', methods=['GET', 'POST'])
+@site_app.route(f'{USER_LOGIN}/news/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
     form = NewsForm()
@@ -145,7 +152,6 @@ def edit_news(id):
 
 
 def main():
-    print("__name__:", __name__)
     if __name__ == "__main__":
         db_session.global_init("./sites/site3/databases/blogs.db")
     else:
