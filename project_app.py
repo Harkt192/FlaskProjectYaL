@@ -19,6 +19,7 @@ import os
 master_app = flask.Flask(__name__)
 
 master_app.config["SECRET_KEY"] = "secret_key"
+master_app.config["SESSION_COOKIE_NAME"] = "master_session"
 login_manager = LoginManager()
 login_manager.init_app(master_app)
 
@@ -76,6 +77,7 @@ signal.signal(signal.SIGTERM, exit_cleanup)  # Kill
 
 @login_manager.user_loader
 def load_user(user_id):
+    print("***main_app***", user_id)
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
 
@@ -242,7 +244,7 @@ def site_action_handler(action: str, arg: str):
             path = f"./user_dirs/{current_user.login}_dir/{arg}/site_app.py"
 
         if name_project in SERVER_PROCESS and SERVER_PROCESS[name_project]:
-            webbrowser.open(f"http://127.0.0.1:{SERVER_PROCESS[name_project]["port"]}/", new=1)
+            webbrowser.open(f"http://127.0.0.1:{available_port}/{current_user.login}_/", new=1)
         else:
             available_port = get_available_port()
             if available_port != -1:
@@ -257,12 +259,16 @@ def site_action_handler(action: str, arg: str):
                     "user": current_user.login + "_"
                 }
                 stop_site_in(arg, time=600)  # Принудительное выключение сайта через 10 минут.
-                webbrowser.open(f"http://127.0.0.1:{available_port}/", new=1)
+                webbrowser.open(f"http://127.0.0.1:{available_port}/{current_user.login}_/", new=1)
             else:
                 return flask.render_template("no_servers.html", title="Error")
 
     elif action == "closesite":
-        kill_process(arg)
+        if arg.isdigit():
+            name_project = "site" + arg
+        else:
+            name_project = f"{current_user.login}_{arg}"
+        kill_process(name_project)
 
     elif action == "buysite":
         arg = int(arg)
@@ -335,7 +341,7 @@ def make_reserve_arc(source: str, dest: str):
 
 
 def main():
-    db_session.global_init("db/database.db")
+    db_session.global_init("./db/database.db")
     master_app.run(host="127.0.0.1", port=8887)
 
 
