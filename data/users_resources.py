@@ -38,7 +38,7 @@ class UsersListResource(Resource):
         )
         session.add(user)
         session.commit()
-        return jsonify({'id': user.id})
+        return jsonify(user.to_dict())
 
 
 class UsersResource(Resource):

@@ -9,24 +9,22 @@ class User(SqlAlchemyBase, UserMixin):
     __tablename__ = "Users"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    login = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
-    email = sqlalchemy.Column(sqlalchemy.String, index=True, unique=True, nullable=False)
-    surname = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    login = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=True)
+    email = sqlalchemy.Column(sqlalchemy.String, index=True, unique=True, nullable=True)
+    surname = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    icon = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    position = sqlalchemy.Column(sqlalchemy.String, default="user")
+    hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     user_files = orm.relationship("User_files", back_populates="user")
 
     def to_dict(self, params):
         dict_ = {"id": self.id,
                  "surname": self.surname,
                  "name": self.name,
-                 "age": self.age,
-                 "position": self.position,
-                 "speciality": self.speciality,
-                 "address": self.address,
+                 "login": self.login,
                  "email": self.email,
-                 "hashed_password": self.hashed_password,
-                 "modified_date": self.modified_date}
+                 "hashed_password": self.hashed_password}
         return_dict = {param: dict_[param] for param in params}
         return return_dict
 

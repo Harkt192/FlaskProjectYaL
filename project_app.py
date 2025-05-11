@@ -9,6 +9,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 import webbrowser
 import subprocess
 import threading
+import datetime
 import signal
 import sqlite3
 import zipfile
@@ -118,8 +119,8 @@ def reqister():
         db_sess.commit()
 
         dir_name = db_sess.query(User_files).filter(User_files.user_id == user.id).first().dir_name
-        os.mkdir(fr"./user_dirs/{dir_name}")
-
+        os.mkdir(f"./user_dirs/{dir_name}")
+        shutil.copy(os.path.join("db/", "projects.db"), f"./user_dirs/{dir_name}")
         return flask.redirect('/login')
     return flask.render_template('register.html', title='Регистрация', form=form)
 
@@ -165,15 +166,23 @@ def choose_site():
 @master_app.route("/mysites")
 def mysites():
     if current_user.is_authenticated:
-        db_session.global_init(fr"user_dirs/{current_user.login}_dir/projects.db")
-        db_sess = db_session.create_session()
-
-        projects = db_sess.query(Project).all()
-        db_session.global_init("db/database.db")
+        con = sqlite3.connect(fr"user_dirs/{current_user.login}_dir/projects.db")
+        cursor = con.cursor()
+        params = ["id", "name", "type", "about", "is_finished", "start_time"]
+        user_projects = cursor.execute(
+            f"""
+            SELECT {", ".join(params)}
+            FROM projects
+            """
+        ).fetchall()
+        user_projects = list(map(
+            lambda project: {par: project[params.index(par)] for par in params}, user_projects
+        ))
+        print(*user_projects, sep="\n")
         return flask.render_template(
             "mysites.html",
             title="My sites",
-            projects=projects,
+            projects=user_projects,
             login=current_user.login
         )
     return flask.render_template(
@@ -275,7 +284,6 @@ def site_action_handler(action: str, arg: str):
         con = sqlite3.connect(fr"user_dirs/{current_user.login}_dir/projects.db")
         cursor = con.cursor()
 
-
         names = [
             "Site_for_Selling", "Forum_Site", "News_Site", "Gaming_Site", "Blog_Site"
         ]
@@ -286,38 +294,54 @@ def site_action_handler(action: str, arg: str):
             "Игровой Сайт, на нем можно сделать любую игру",
             "Сайт для блога, благодаря этому сайту вы сможете быть ближе к своей аудитории"
         ]
-        name_ = names[arg - 1] + "(1)"
-        about_ = abouts[arg - 1]
-        k = 1
+        project_name = names[arg - 1] + "(1)"
+        project_about = abouts[arg - 1]
+        project_type = names[arg - 1]
+        project_is_finished = False
+        # project_datetime = datetime.datetime.now().strftime("%d.%m.%Y %M:%H")
+        project_datetime = datetime.datetime.now()
+
+        user_projects = cursor.execute(
+            """
+            SELECT * FROM projects
+            """
+        ).fetchall()
         project_names = cursor.execute(
             """
             SELECT name FROM projects 
             """
         ).fetchall()
-        while name_ in project_names:
+        project_names = list(map(lambda x: x[0], project_names))
+
+        k = 1
+        while project_name in project_names:
             k += 1
-            name_ = names[arg - 1] + f"({k})"
+            project_name = names[arg - 1] + f"({k})"
         project = Project(
-            name=name_,
-            about=about_,
-            type=names[arg - 1]
+            name=project_name,
+            about=project_about,
+            type=project_type,
+            is_finished=project_is_finished,
+            start_time=project_datetime
         )
-        print(project)
+        project_data = f"('{project.type}', '{project.name}', '{project.about}',\
+{project.is_finished}, '{project.start_time}')"
         cursor.execute(
             f"""
-            INSERT INTO projects
-            VALUES {project}
+            INSERT INTO projects (type, name, about, is_finished, start_time)
+            VALUES {project_data}
             """
         )
+        con.commit()
         con.close()
 
         shutil.copytree(
             fr"sites/site{arg}",
-            fr"user_dirs/{current_user.login}_dir/{name_}"
+            fr"user_dirs/{current_user.login}_dir/{project_name}"
         )
         make_reserve_arc(
-            fr"user_dirs/{current_user.login}_dir/{name_}",
-            fr"user_dirs/{current_user.login}_dir/{name_}"
+            fr"user_dirs/{current_user.login}_dir/{project_name}",
+            fr"user_dirs/{current_user.login}_dir/{project_name}"
         )
         return flask.redirect("/mysites")
     else:

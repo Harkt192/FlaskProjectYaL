@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="../static/css/style_widgets.css">
     {% if current_user.is_authenticated %}
         <h1>Мои Сайты</h1>
+
         {% for project in projects %}
             <div class="widget">
                 <h2>{{ project.id }} {{ project.name }}</h2>

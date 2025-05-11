@@ -7,15 +7,26 @@
         <h2>Вы можете просмотреть базовый шаблон такого сайта, относительно которого будет<br>
             создаваться уже готовый и полностью функциональный сайт.</h2>
     </div>
-    <p class="explanation">*Ниже вы можете запустить пробный шаблон такого сайта.</p>
-    <button class="site_button" onclick="window.location.href='/site/runsite/3'">Открыть Сайт</button>
-    <button class="site_button" onclick="window.location.href='/site/closesite/3'">Закрыть Сайт</button>
-    <p class="explanation">*При запуске сайт автоматически закроется через 10 минут,<br>
-        но вы можете предварительно завершить его работу.</p>
-
     {% if current_user.is_authenticated %}
+        <p class="explanation">*Ниже вы можете запустить пробный шаблон такого сайта.</p>
+        <button class="site_button" onclick="window.location.href='/site/runsite/3'">Открыть Сайт</button>
+        <button class="site_button" onclick="window.location.href='/site/closesite/3'">Закрыть Сайт</button>
+        <p class="explanation">*При запуске сайт автоматически закроется через 10 минут,<br>
+            но вы можете предварительно завершить его работу.
+        </p>
         <button class="site_button" onclick="window.location.href='/site/buysite/3'">Купить Сайт</button>
     {% else %}
+        <h3>Для запуска сайта, вам необходимо авторизоваться.</h3>
+        <p class="explanation">*Ниже вы можете запустить пробный шаблон такого сайта.</p>
+        <button class="disabled_site_button" disabled="disabled" onclick="window.location.href='/site/runsite/3'">
+            Открыть Сайт
+        </button>
+        <button class="disabled_site_button" disabled="disabled" onclick="window.location.href='/site/closesite/3'">
+            Закрыть Сайт
+        </button>
+        <p class="explanation">*При запуске сайт автоматически закроется через 10 минут,<br>
+            но вы можете предварительно завершить его работу.
+        </p>
         <button class="disabled_site_button" disabled="disabled">Купить Сайт</button>
     {% endif %}
 {% endblock %}
