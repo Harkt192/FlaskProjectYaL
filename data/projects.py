@@ -15,3 +15,7 @@ class Project(SqlAlchemyBase, UserMixin):
     about = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     is_finished = sqlalchemy.Column(sqlalchemy.BOOLEAN, default=False)
     start_time = sqlalchemy.Column(sqlalchemy.DATETIME, default=datetime.datetime.now())
+
+    def __str__(self):
+        text = f"({self.id}, {self.type}, {self.name}, {self.about}, {self.is_finished}, {self.start_time})"
+        return text

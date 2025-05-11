@@ -19,12 +19,12 @@ login_manager.init_app(site_app)
 def get_args() -> tuple:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", nargs=1, type=int, dest="port")
-    parser.add_argument("--user-login", nargs=1, type=str, dest="user_login")
+    parser.add_argument("--user-login", nargs=1, type=str, dest="userlogin")
 
     args = parser.parse_args()
-    port = args["port"]
-    user_login = args["user_login"]
-    return port, user_login
+    port = args.port[0]
+    userlogin = args.userlogin[0]
+    return port, userlogin
 
 
 HOST = "127.0.0.1"
@@ -37,19 +37,16 @@ def load_user(user_id):
     return db_sess.query(User).get(user_id)
 
 
-@site_app.route(f'{USER_LOGIN}/logout')
+@site_app.route(f'/logout_user_')
 @login_required
-def logout():
+def logout_user_():
+    print(USER_LOGIN)
+    print(f"***{current_user.name.upper()}***")
     logout_user()
-    return flask.redirect("/")
+    return flask.redirect(f"/")
 
 
-@site_app.route("/")
-def redirect_page():
-    return flask.redirect(f"{USER_LOGIN}/")
-
-
-@site_app.route(f"{USER_LOGIN}/")
+@site_app.route(f"/")
 def index():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
@@ -59,7 +56,7 @@ def index():
     return flask.render_template("index.html", news=news)
 
 
-@site_app.route(f'{USER_LOGIN}/login', methods=['GET', 'POST'])
+@site_app.route(f'/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -67,26 +64,34 @@ def login():
         user = db_sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return flask.redirect("/")
+            return flask.redirect(f"/")
         return flask.render_template('login.html',
-                               message="Неправильный логин или пароль",
-                               form=form)
-    return flask.render_template('login.html', title='Авторизация', form=form)
+                                     message="Неправильный логин или пароль",
+                                     # userlogin=USER_LOGIN,
+                                     form=form)
+    return flask.render_template('login.html',
+                                 title='Авторизация',
+                                 # userlogin=USER_LOGIN,
+                                 form=form)
 
 
-@site_app.route(f'{USER_LOGIN}/register', methods=['GET', 'POST'])
+@site_app.route(f'/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
-            return flask.render_template('register.html', title='Регистрация',
-                                   form=form,
-                                   message="Пароли не совпадают")
+            return flask.render_template('register.html',
+                                         title='Регистрация',
+                                         form=form,
+                                         # userlogin=USER_LOGIN,
+                                         message="Пароли не совпадают")
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
-            return flask.render_template('register.html', title='Регистрация',
-                                   form=form,
-                                   message="Такой пользователь уже есть")
+            return flask.render_template('register.html',
+                                        title='Регистрация',
+                                         form=form,
+                                         # userlogin=USER_LOGIN,
+                                         message="Такой пользователь уже есть")
         user = User(
             name=form.name.data,
             email=form.email.data,
@@ -95,11 +100,14 @@ def reqister():
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
-        return flask.redirect('/login')
-    return flask.render_template('register.html', title='Регистрация', form=form)
+        return flask.redirect(f'/login')
+    return flask.render_template('register.html',
+                                 title='Регистрация',
+                                 # userlogin=USER_LOGIN,
+                                 form=form)
 
 
-@site_app.route(f'{USER_LOGIN}/news', methods=['GET', 'POST'])
+@site_app.route(f'/news', methods=['GET', 'POST'])
 @login_required
 def add_news():
     form = NewsForm()
@@ -112,12 +120,14 @@ def add_news():
         current_user.news.append(news)
         db_sess.merge(current_user)
         db_sess.commit()
-        return flask.redirect('/')
-    return flask.render_template('news.html', title='Добавление новости',
-                           form=form)
+        return flask.redirect(f'/')
+    return flask.render_template('news.html',
+                                 title='Добавление новости',
+                                 # userlogin=USER_LOGIN,
+                                 form=form)
 
 
-@site_app.route(f'{USER_LOGIN}/news/<int:id>', methods=['GET', 'POST'])
+@site_app.route(f'/news/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
     form = NewsForm()
@@ -142,13 +152,13 @@ def edit_news(id):
             news.content = form.content.data
             news.is_private = form.is_private.data
             db_sess.commit()
-            return flask.redirect('/')
+            return flask.redirect(f'/')
         else:
             flask.abort(404)
     return flask.render_template('news.html',
-                           title='Редактирование новости',
-                           form=form
-                           )
+                                 title='Редактирование новости',
+                                 # userlogin=USER_LOGIN,
+                                 form=form)
 
 
 def main():

@@ -10,8 +10,8 @@ __factory = None
 def global_init(db_file):
     global __factory
 
-    # if __factory:
-    #     return
+    if __factory:
+        return
 
     if not db_file or not db_file.strip():
         raise Exception("Необходимо указать файл базы данных.")

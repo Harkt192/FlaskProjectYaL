@@ -26,8 +26,8 @@ ALL_PORTS = {port: "free" for port in range(1111, 10000)}
 FREE_PORTS = [port for port in range(1111, 10000)]
 
 ### 8888 - основной порт ###
-ALL_PORTS.pop(8888)
-FREE_PORTS.remove(8888)
+ALL_PORTS.pop(8887)
+FREE_PORTS.remove(8887)
 
 
 def get_available_port() -> int:
@@ -140,6 +140,7 @@ def login():
 @master_app.route('/user_logout')
 @login_required
 def logout():
+    print(f"***{current_user.login.upper()}***")
     logout_user()
     return flask.redirect("/")
 
@@ -250,10 +251,10 @@ def site_action_handler(action: str, arg: str):
                         "python",
                         path,
                         f"--port={available_port}",
-                        f"--user-login={current_user.login}"
+                        f"--user-login={current_user.login}_"
                     ]),
                     "port": available_port,
-                    "user": current_user.login
+                    "user": current_user.login + "_"
                 }
                 stop_site_in(arg, time=600)  # Принудительное выключение сайта через 10 минут.
                 webbrowser.open(f"http://127.0.0.1:{available_port}/", new=1)
@@ -265,8 +266,10 @@ def site_action_handler(action: str, arg: str):
 
     elif action == "buysite":
         arg = int(arg)
-        db_session.global_init(fr"user_dirs/{current_user.login}_dir/projects.db")
-        db_sess = db_session.create_session()
+        con = sqlite3.connect(fr"user_dirs/{current_user.login}_dir/projects.db")
+        cursor = con.cursor()
+
+
         names = [
             "Site_for_Selling", "Forum_Site", "News_Site", "Gaming_Site", "Blog_Site"
         ]
@@ -280,8 +283,12 @@ def site_action_handler(action: str, arg: str):
         name_ = names[arg - 1] + "(1)"
         about_ = abouts[arg - 1]
         k = 1
-        projects = db_sess.query(Project).filter(Project.name.like(f"{name_}%"))
-        while name_ in projects:
+        project_names = cursor.execute(
+            """
+            SELECT name FROM projects 
+            """
+        ).fetchall()
+        while name_ in project_names:
             k += 1
             name_ = names[arg - 1] + f"({k})"
         project = Project(
@@ -289,8 +296,14 @@ def site_action_handler(action: str, arg: str):
             about=about_,
             type=names[arg - 1]
         )
-        db_sess.add(project)
-        db_sess.commit()
+        print(project)
+        cursor.execute(
+            f"""
+            INSERT INTO projects
+            VALUES {project}
+            """
+        )
+        con.close()
 
         shutil.copytree(
             fr"sites/site{arg}",
@@ -300,8 +313,6 @@ def site_action_handler(action: str, arg: str):
             fr"user_dirs/{current_user.login}_dir/{name_}",
             fr"user_dirs/{current_user.login}_dir/{name_}"
         )
-
-        db_session.global_init("db/database.db")
         return flask.redirect("/mysites")
     else:
         flask.abort(404)
@@ -325,7 +336,7 @@ def make_reserve_arc(source: str, dest: str):
 
 def main():
     db_session.global_init("db/database.db")
-    master_app.run(host="127.0.0.1", port=8888)
+    master_app.run(host="127.0.0.1", port=8887)
 
 
 main()
