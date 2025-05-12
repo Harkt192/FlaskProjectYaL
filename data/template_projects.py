@@ -6,23 +6,25 @@ import datetime
 from flask_login import UserMixin
 
 
-class Project(SqlAlchemyBase, UserMixin):
-    __tablename__ = "projects"
+class Template_project(SqlAlchemyBase, UserMixin):
+    __tablename__ = "Template_projects"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    site_name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     type = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    name = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=True)
+    num_purchases = sqlalchemy.Column(sqlalchemy.Integer, default=0)
     about = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    is_finished = sqlalchemy.Column(sqlalchemy.BOOLEAN, default=False)
-    start_time = sqlalchemy.Column(sqlalchemy.DATETIME, default=datetime.datetime.now())
+    explanation = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     def to_dict(self, params):
         dict_ = {"id": self.id,
-                 "type": self.type,
+                 "site_name": self.site_name,
                  "name": self.name,
+                 "type": self.type,
                  "about": self.about,
-                 "is_finished": self.is_finished,
-                 "start_time": self.start_time}
+                 "explanation": self.explanation,
+                 "num_purchases": self.num_purchases}
         if params == "*":
             return dict_
         return_dict = {param: dict_[param] for param in params}

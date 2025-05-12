@@ -3,8 +3,11 @@ from data import db_session
 from data.users import User
 from data.users_files import User_files
 from data.projects import Project
+from data.template_projects import Template_project
 from forms.user import RegisterForm, LoginForm
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_restful import Api, Resource
+from data.sites_resources import TemplateSites_ListResource, TemplateSites_Resource, Sites_ListResourse
 
 import webbrowser
 import subprocess
@@ -18,11 +21,14 @@ import sys
 import os
 
 master_app = flask.Flask(__name__)
-
+api = Api(master_app)
 master_app.config["SECRET_KEY"] = "secret_key"
 master_app.config["SESSION_COOKIE_NAME"] = "master_session"
 login_manager = LoginManager()
 login_manager.init_app(master_app)
+api.add_resource(TemplateSites_ListResource, '/api/sites')
+api.add_resource(TemplateSites_Resource, '/api/sites/<site_id>')
+# api.add_resource(TemplateSites_ListResource, '/api/sites')
 
 ALL_PORTS = {port: "free" for port in range(1111, 10000)}
 FREE_PORTS = [port for port in range(1111, 10000)]
@@ -78,27 +84,59 @@ signal.signal(signal.SIGTERM, exit_cleanup)  # Kill
 
 @login_manager.user_loader
 def load_user(user_id):
-    print("***main_app***", user_id)
     db_sess = db_session.create_session()
-    return db_sess.query(User).get(user_id)
+    user = db_sess.query(User).get(user_id)
+    db_sess.close()
+    return user
+
+
+@master_app.route('/check-user')
+def check_user():
+    if current_user.is_authenticated:
+        return flask.jsonify({'authenticated': True, 'login': current_user.login})
+    return flask.jsonify({'authenticated': False})
+
+
+def check_password(password: str) -> tuple:
+    if password.isdigit():
+        return False, "Пароль не может состоять только из цифр"
+    if len(password) < 6 or len(password) > 50:
+        return False, "Длина пароля должна быть в пределах 6-50 символов"
+    nums = [str(i) for i in range(0, 10)]
+    for num in nums:
+        if num in password:
+            break
+    else:
+        return False, "В пароле должны быть цифры"
+    return True, None
+
+
+def check_form(form: RegisterForm):
+    check_result, check_message = check_password(form.password)
+    if not check_result:
+        return flask.render_template('register.html', title='Регистрация',
+                                     form=form,
+                                     message=check_message)
+    if form.password.data != form.password_again.data:
+        return flask.render_template('register.html', title='Регистрация',
+                                     form=form,
+                                     message="Пароли не совпадают")
+    db_sess = db_session.create_session()
+    if db_sess.query(User).filter(User.login == form.login.data).first():
+        return flask.render_template('register.html', title='Регистрация',
+                                     form=form,
+                                     message="Логин занят")
+    if db_sess.query(User).filter(User.email == form.email.data).first():
+        return flask.render_template('register.html', title='Регистрация',
+                                     form=form,
+                                     message="Уже существует пользователь с такой почтой")
+
 
 @master_app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
-        if form.password.data != form.password_again.data:
-            return flask.render_template('register.html', title='Регистрация',
-                                   form=form,
-                                   message="Пароли не совпадают")
-        db_sess = db_session.create_session()
-        if db_sess.query(User).filter(User.login == form.login.data).first():
-            return flask.render_template('register.html', title='Регистрация',
-                                   form=form,
-                                   message="Логин занят")
-        if db_sess.query(User).filter(User.email == form.email.data).first():
-            return flask.render_template('register.html', title='Регистрация',
-                                   form=form,
-                                   message="Уже существует пользователь с такой почтой")
+        check_form(form)
 
         user = User(
             surname=form.surname.data,
@@ -117,7 +155,7 @@ def reqister():
         )
         db_sess.add(user_files)
         db_sess.commit()
-
+        db_sess.close()
         dir_name = db_sess.query(User_files).filter(User_files.user_id == user.id).first().dir_name
         os.mkdir(f"./user_dirs/{dir_name}")
         shutil.copy(os.path.join("db/", "projects.db"), f"./user_dirs/{dir_name}")
@@ -131,6 +169,7 @@ def login():
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.email == form.email.data).first()
+        db_sess.close()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return flask.redirect("/")
@@ -143,7 +182,6 @@ def login():
 @master_app.route('/user_logout')
 @login_required
 def logout():
-    print(f"***{current_user.login.upper()}***")
     logout_user()
     return flask.redirect("/")
 
@@ -158,9 +196,9 @@ def hello():
     return flask.render_template("first_page.html", title="Main page")
 
 
-@master_app.route("/choosesite")
+@master_app.route("/sites")
 def choose_site():
-    return flask.render_template("choose_sites.html", title="Choose site")
+    return flask.render_template("sites.html", title="Choose site")
 
 
 @master_app.route("/mysites")
@@ -178,7 +216,6 @@ def mysites():
         user_projects = list(map(
             lambda project: {par: project[params.index(par)] for par in params}, user_projects
         ))
-        print(*user_projects, sep="\n")
         return flask.render_template(
             "mysites.html",
             title="My sites",
@@ -204,18 +241,18 @@ def about():
 
 
 # ---------
-@master_app.route("/sites/<int:num>")
-def site_pages(num):
-    if num == 1:
-        return flask.render_template("site1.html", title="First site")
-    elif num == 2:
-        return flask.render_template("site2.html", title="Second site")
-    elif num == 3:
-        return flask.render_template("site3.html", title="News site")
-    elif num == 4:
-        return flask.render_template("site4.html", title="Fourth site")
-    elif num == 5:
-        return flask.render_template("site5.html", title="Fifth site")
+@master_app.route("/sites/<int:site_id>")
+def site_pages(site_id):
+    db_sess = db_session.create_session()
+    project = db_sess.query(Template_project).get(site_id)
+    site_name = project.site_name
+    site_type = project.type
+    db_sess.close()
+    return flask.render_template(
+        "site.html",
+        title=site_type,
+        site_name=site_name
+    )
 
 
 def kill_process(name_project: str):

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="main_h1">{{ site_name }}</h1>
+
+    <div id="site-container"></div>
+    <script src="{{ url_for('static', filename='js/site_script.js') }}"></script>
+{% endblock %}

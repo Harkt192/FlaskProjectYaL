@@ -97,7 +97,7 @@ def hello():
 
 @app.route("/choosesite")
 def choose_site():
-    return flask.render_template("choose_sites.html", title="Choose site")
+    return flask.render_template("sites.html", title="Choose site")
 
 
 @app.route("/mysites")
