@@ -142,7 +142,7 @@ def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
         check_form(form)
-
+        db_sess = db_session.create_session()
         user = User(
             surname=form.surname.data,
             name=form.name.data,
