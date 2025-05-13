@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+</head>
+<body>
+    <nav class="nav_main">
+        <a href="/{{ userlogin }}" class="btn btn-success">Home</a>
+        {% if current_user.is_authenticated %}
+            <h1>{{ current_user.username }}</h1>
+            <a href="/{{ userlogin }}/post/new" class="btn btn-warning" >Новый пост</a>
+            <a href="/{{ userlogin }}/logout" class="btn btn-danger">Выйти</a>
+        {% else %}
+            <a href="/{{ userlogin }}/login" class="btn btn-success">Войти</a>
+            <a href="/{{ userlogin }}/register" class="btn btn-primary">Зарегистрироваться</a>
+        {% endif %}
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

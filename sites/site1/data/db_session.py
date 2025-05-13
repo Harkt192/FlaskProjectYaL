@@ -24,10 +24,10 @@ def global_init(db_file):
     from . import __all_models
 
     SqlAlchemyBase.metadata.create_all(engine)
-    print("***УСПЕШНО***")
+    print("***УСПЕШНО1***")
 
 
 def create_session() -> Session:
     global __factory
-    print("***СЕССИЯ***")
+    print("***СЕССИЯ1***")
     return __factory()

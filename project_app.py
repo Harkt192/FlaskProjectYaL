@@ -69,9 +69,10 @@ def exit_cleanup(*args):
     global SERVER_PROCESS
     for name, data in SERVER_PROCESS.items():
         if data:
-            port, process = data["port"], data["process"]
+            port, process, user = data["port"], data["process"], data["user"]
+            print(name, process)
+            os.kill(process.pid, signal.SIGTERM)
             make_free_port(port)
-            kill_process(name)
             print(f"***ЗАВЕРШАЕМ РАБОТУ САЙТА: {name} ***")
     print("\nПРОВЕРКА ПРОЦЕССОВ:", SERVER_PROCESS)
     sys.exit(0)
@@ -126,6 +127,10 @@ def check_form(form: RegisterForm):
         return flask.render_template('register.html', title='Регистрация',
                                      form=form,
                                      message="Логин занят")
+    if "site" in form.login:
+        return flask.render_template('register.html', title='Регистрация',
+                                     form=form,
+                                     message="Ваш логин не может содержать site")
     if db_sess.query(User).filter(User.email == form.email.data).first():
         return flask.render_template('register.html', title='Регистрация',
                                      form=form,
@@ -188,17 +193,32 @@ def logout():
 
 @master_app.route("/my_profile")
 def profile():
-    return flask.render_template("profile.html", title="Profile")
+    return flask.render_template("profile.html", title="Профиль")
 
 
 @master_app.route("/")
 def hello():
-    return flask.render_template("first_page.html", title="Main page")
+    slides = [
+        {"src": "images/mars_image_1.jpg",
+         "alt": "Слайд 1",
+         "caption": "Первый слайд"},
+        {"src": "images/mars_image_2.png",
+         "alt": "Слайд 2",
+         "caption": "Второй слайд"},
+        {"src": "images/mars_image_3.jpg",
+         "alt": "Слайд 3",
+         "caption": "Третий слайд"}
+    ]
+    return flask.render_template(
+        "presentation.html",
+        title="Основная Страница",
+        presentation_images=slides
+    )
 
 
 @master_app.route("/sites")
 def choose_site():
-    return flask.render_template("sites.html", title="Choose site")
+    return flask.render_template("sites.html", title="Сайты")
 
 
 @master_app.route("/mysites")
@@ -213,6 +233,7 @@ def mysites():
             FROM projects
             """
         ).fetchall()
+        con.close()
         user_projects = list(map(
             lambda project: {par: project[params.index(par)] for par in params}, user_projects
         ))
@@ -230,17 +251,59 @@ def mysites():
         )
 
 
-@master_app.route("/feedback")
-def feedback():
-    return flask.render_template("feedback.html", title="Feedback")
+###----------------### Часть Макара
+counter = 0
+@master_app.route('/feedback', methods=['GET', 'POST'])
+def chat():
+    global counter
+    messages = []
+
+    if flask.request.method == 'POST':
+        user_message = flask.request.form.get('user_message')
+
+        if user_message:
+            messages.append({'sender': 'user', 'text': user_message})
+            if counter == 0:
+                bot_response = f"Здравствуй! Чем могу быть полезен?"
+            else:
+                bot_response = f'Не могу помочь'
+            messages.append({'sender': 'bot', 'text': bot_response})
+        counter += 1
+
+    return flask.render_template('feedback.html', messages=messages)
 
 
 @master_app.route("/about")
 def about():
-    return flask.render_template("about.html", title="About us")
+    return flask.render_template("about.html", title="О нас")
 
 
-# ---------
+all_temp = ["template_1", "template_2", "template_3"]
+cart_list = ["template_1", "template_2"]
+
+@master_app.route("/cart", methods=['GET', 'POST'])
+def show_templates():
+    global cart_list
+    if flask.request.method == 'POST':
+        action = flask.request.form.get('action')
+
+        if action and action.startswith('remove_'):
+            template_to_remove = action.replace('remove_', '')
+            if template_to_remove in cart_list:
+                cart_list.remove(template_to_remove)
+            return flask.redirect('/cart')
+
+        elif action == 'buy':
+            return flask.redirect('/mysites')
+
+        elif action == 'back':
+            return flask.redirect('/choosesite')
+
+    filtered_templates = [t for t in all_temp if t in cart_list]
+    return flask.render_template("cart.html", templates=filtered_templates, cart_list_len=len(cart_list))
+###----------------###
+
+
 @master_app.route("/sites/<int:site_id>")
 def site_pages(site_id):
     db_sess = db_session.create_session()
@@ -284,22 +347,27 @@ def site_action_handler(action: str, arg: str):
     if action == "runsite":
         if arg.isdigit():
             name_project = "site" + arg
-            path = f"./sites/site{arg}/site_app.py"
+            path = f"./sites/site{arg}/"
         else:
             name_project = f"{current_user.login}_{arg}"
-            path = f"./user_dirs/{current_user.login}_dir/{arg}/site_app.py"
+            path = f"./user_dirs/{current_user.login}_dir/{arg}/"
 
         if name_project in SERVER_PROCESS and SERVER_PROCESS[name_project]:
-            webbrowser.open(f"http://127.0.0.1:{available_port}/{current_user.login}_/", new=1)
+            webbrowser.open(f"http://127.0.0.1:{SERVER_PROCESS[name_project]["port"]}/{current_user.login}_/", new=1)
         else:
             available_port = get_available_port()
+            print("***ПОРТ***",available_port)
             if available_port != -1:
+
                 SERVER_PROCESS[name_project] = {
                     "process": subprocess.Popen([
                         "python",
-                        path,
+                        path + "site_app.py",
                         f"--port={available_port}",
-                        f"--user-login={current_user.login}_"
+                        f"--user-login={current_user.login}_",
+                        f"--secret-key={current_user.login[::-1] + str(available_port)}",
+                        f"--session-name={(current_user.login + str(available_port))[::-1]}",
+                        f"--path-to-db={path}db/database.db"
                     ]),
                     "port": available_port,
                     "user": current_user.login + "_"
@@ -318,31 +386,25 @@ def site_action_handler(action: str, arg: str):
 
     elif action == "buysite":
         arg = int(arg)
+
+
+        db_sess = db_session.create_session()
+        temp_project = db_sess.query(Template_project).get(arg)
+        db_sess.close()
+
         con = sqlite3.connect(fr"user_dirs/{current_user.login}_dir/projects.db")
         cursor = con.cursor()
 
         names = [
-            "Site_for_Selling", "Forum_Site", "News_Site", "Gaming_Site", "Blog_Site"
-        ]
-        abouts = [
-            "Этот сайт предназначен для продажи чего-либо.",
-            "Форум Сайт, на этом сайте пользователи смогут обсуждать любые вопросы.",
-            "Новостной Сайт, на нем можно публиковать любые новости.",
-            "Игровой Сайт, на нем можно сделать любую игру",
-            "Сайт для блога, благодаря этому сайту вы сможете быть ближе к своей аудитории"
+            "News_Site", "Forum_Site", "Gaming_Site", "Site_for_Selling", "Blog_Site"
         ]
         project_name = names[arg - 1] + "(1)"
-        project_about = abouts[arg - 1]
-        project_type = names[arg - 1]
+        project_about = temp_project.about
+        project_type = temp_project.type
         project_is_finished = False
         # project_datetime = datetime.datetime.now().strftime("%d.%m.%Y %M:%H")
         project_datetime = datetime.datetime.now()
 
-        user_projects = cursor.execute(
-            """
-            SELECT * FROM projects
-            """
-        ).fetchall()
         project_names = cursor.execute(
             """
             SELECT name FROM projects 

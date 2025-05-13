@@ -32,16 +32,29 @@ def abort_if_template_site_not_found(site_id: str):
     if site_id.isdigit():
         site_id = int(site_id)
         project = session.query(Template_project).get(site_id)
+    session.close()
     if not project:
         abort(404, message=f"Site {site_id} not found")
 
 
 class Sites_ListResourse(Resource):
     def get(self):
-        session = db_session.create_session()
-        projects = session.query(Project).all()
+        con = sqlite3.connect(fr"user_dirs/{current_user.login}_dir/projects.db")
+        cursor = con.cursor()
+        params = ["id", "name", "type", "about", "is_finished", "start_time"]
+        user_projects = cursor.execute(
+            f"""
+            SELECT {", ".join(params)}
+            FROM projects
+            """
+        ).fetchall()
+        con.close()
+
+        user_projects = list(map(
+            lambda project: {par: project[params.index(par)] for par in params}, user_projects
+        ))
         return jsonify({
-            "projects": [item.to_dict("*") for item in projects]
+            "projects": [item.to_dict("*") for item in user_projects]
         })
 
     def post(self):
@@ -56,6 +69,7 @@ class Sites_ListResourse(Resource):
         )
         session.add(project)
         session.commit()
+        session.close()
         return jsonify(
             project.to_dict("*")
         )
@@ -65,6 +79,7 @@ class TemplateSites_ListResource(Resource):
     def get(self):
         session = db_session.create_session()
         template_projects = session.query(Template_project).all()
+        session.close()
         return jsonify({
             "template_projects": [item.to_dict("*") for item in template_projects]
         })
@@ -81,6 +96,7 @@ class TemplateSites_ListResource(Resource):
         )
         session.add(template_project)
         session.commit()
+        session.close()
         return jsonify(
             template_project.to_dict("*")
         )
@@ -91,6 +107,7 @@ class TemplateSites_Resource(Resource):
         abort_if_template_site_not_found(site_id)
         session = db_session.create_session()
         template_site = session.query(Template_project).get(site_id)
+        session.close()
         return jsonify(template_site.to_dict("*"))
 
     """def delete(self, user_id):

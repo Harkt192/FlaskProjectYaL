@@ -2,6 +2,17 @@ body {
     background-color: #f3f3f3;
 }
 
+div.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    background-color: #535353;
+    padding: 2em 2em 2em 2em;
+    border-radius: 2em;
+    border: medium solid black;
+}
+
 nav.nav_bar {
     width: 100%;
     height: 4em;
