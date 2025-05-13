@@ -245,15 +245,21 @@ def choose_avatar():
 @master_app.route("/")
 def hello():
     slides = [
-        {"src": "images/mars_image_1.jpg",
+        {"src": "images/1.png",
          "alt": "Слайд 1",
          "caption": "Первый слайд"},
-        {"src": "images/mars_image_2.png",
+        {"src": "images/2.png",
          "alt": "Слайд 2",
          "caption": "Второй слайд"},
-        {"src": "images/mars_image_3.jpg",
+        {"src": "images/3.png",
          "alt": "Слайд 3",
-         "caption": "Третий слайд"}
+         "caption": "Третий слайд"},
+        {"src": "images/4.png",
+         "alt": "Слайд 4",
+         "caption": "Четвертый слайд"},
+        {"src": "images/5.png",
+         "alt": "Слайд 5",
+         "caption": "Пятый слайд"}
     ]
     return flask.render_template(
         "presentation.html",
