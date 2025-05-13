@@ -24,11 +24,20 @@ master_app = flask.Flask(__name__)
 api = Api(master_app)
 master_app.config["SECRET_KEY"] = "secret_key"
 master_app.config["SESSION_COOKIE_NAME"] = "master_session"
+master_app.config['UPLOAD_FOLDER'] = 'static/uploads'
+master_app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 login_manager = LoginManager()
 login_manager.init_app(master_app)
 api.add_resource(TemplateSites_ListResource, '/api/sites')
 api.add_resource(TemplateSites_Resource, '/api/sites/<site_id>')
 # api.add_resource(TemplateSites_ListResource, '/api/sites')
+
+avatars_list = [
+    'avatars/avatar1.png',
+    'avatars/avatar2.png',
+    'avatars/avatar3.png'
+]
+
 
 ALL_PORTS = {port: "free" for port in range(1111, 10000)}
 FREE_PORTS = [port for port in range(1111, 10000)]
@@ -76,6 +85,10 @@ def exit_cleanup(*args):
             print(f"***ЗАВЕРШАЕМ РАБОТУ САЙТА: {name} ***")
     print("\nПРОВЕРКА ПРОЦЕССОВ:", SERVER_PROCESS)
     sys.exit(0)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in master_app.config['ALLOWED_EXTENSIONS']
 
 
 # Обработчик выключения программы
@@ -192,8 +205,41 @@ def logout():
 
 
 @master_app.route("/my_profile")
+@login_required
 def profile():
-    return flask.render_template("profile.html", title="Профиль")
+    return flask.render_template("profile.html",
+                               title="Профиль",
+                               current_user=current_user)
+
+@master_app.route('/choose_avatar', methods=['GET', 'POST'])
+@login_required
+def choose_avatar():
+    if flask.request.method == 'POST':
+        if 'custom_avatar' in flask.request.files:
+            file = flask.request.files['custom_avatar']
+            if file and allowed_file(file.filename):
+                filename = f"user_{current_user.login}.{file.filename.rsplit('.', 1)[1].lower()}"
+                file.save(os.path.join(master_app.config['UPLOAD_FOLDER'], filename))
+                current_user.avatar = f"uploads/{filename}"
+                db_sess = db_session.create_session()
+                db_sess.merge(current_user)
+                db_sess.commit()
+                db_sess.close()
+                return flask.redirect(flask.url_for('profile'))
+
+        elif 'selected_avatar' in flask.request.form:
+            selected = flask.request.form['selected_avatar']
+            if selected in avatars_list:
+                current_user.avatar = selected
+                db_sess = db_session.create_session()
+                db_sess.merge(current_user)
+                db_sess.commit()
+                db_sess.close()
+                return flask.redirect(url_for('profile'))
+
+    return flask.render_template('choose_avatar.html',
+                               avatars=avatars_list,
+                               current_user=current_user)
 
 
 @master_app.route("/")

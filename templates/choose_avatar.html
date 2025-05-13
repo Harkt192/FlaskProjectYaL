@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Выбор аватара</h1>
+
+    <div class="current-avatar-section">
+        <h3>Текущий аватар</h3>
+        <img src="{{ url_for('static', filename=current_user.avatar if current_user.avatar else 'avatars/default.png') }}"
+             alt="Текущий аватар"
+             class="current-avatar">
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="standard-avatars">
+            <h3>Стандартные аватары</h3>
+            <div class="avatar-options">
+                {% for avatar in avatars %}
+                <label class="avatar-label">
+                    <input type="radio" name="selected_avatar" value="{{ avatar }}"
+                           {% if current_user.avatar == avatar %}checked{% endif %}>
+                    <img src="{{ url_for('static', filename=avatar) }}"
+                         class="avatar-option {% if current_user.avatar == avatar %}selected{% endif %}">
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="custom-avatar">
+            <h3>Загрузить свой аватар</h3>
+            <input type="file" name="custom_avatar" accept="image/*">
+            <p>Допустимые форматы: JPG, PNG, GIF. Максимальный размер: 5MB.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{{ url_for('profile') }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+
+    h3 {
+        margin: 15px 0 10px;
+        font-size: 18px;
+    }
+
+    .current-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #28a745;
+        display: block;
+        margin: 10px 0;
+    }
+
+    .avatar-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 15px 0;
+    }
+
+    .avatar-option {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        object-fit: cover;
+        cursor: pointer;
+        border: 2px solid #ddd;
+    }
+
+    .avatar-option.selected {
+        border-color: #28a745;
+    }
+
+    .custom-avatar input[type="file"] {
+        margin: 10px 0;
+    }
+
+    .form-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+{% endblock %}
