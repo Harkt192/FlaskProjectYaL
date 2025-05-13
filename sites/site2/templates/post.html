@@ -5,7 +5,7 @@
         <h2>{{ post.title }}</h2>
         <p class="text-muted">
             Опубликовано {{ post.date_posted.strftime('%d.%m.%Y в %H:%M') }} |
-            Автор: <a href="#">{{ post.author.username }}</a>
+            Автор: <a href="#">{{ post.user_id.username }}</a>
         </p>
         <p>{{ post.content }}</p>
 

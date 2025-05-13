@@ -7,43 +7,47 @@ from forms.user import RegisterForm, LoginForm
 from forms.news import NewsForm
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import argparse
-import os
-
-site_app = flask.Flask(__name__)
-
-site_app.config["SECRET_KEY"] = "site_secret_key"
-site_app.config["SESSION_COOKIE_NAME"] = "site_session"
-login_manager = LoginManager()
-login_manager.init_app(site_app)
 
 
 def get_args() -> tuple:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", nargs=1, type=int, dest="port")
     parser.add_argument("--user-login", nargs=1, type=str, dest="userlogin")
+    parser.add_argument("--secret-key", nargs=1, type=str, dest="secret_key")
+    parser.add_argument("--session-name", nargs=1, type=str, dest="session_name")
+    parser.add_argument("--path-to-db", nargs=1, type=str, dest="path_to_db")
 
     args = parser.parse_args()
     port = args.port[0]
     userlogin = args.userlogin[0]
-    return port, userlogin
+    secret_key = args.secret_key[0]
+    session_name = args.session_name[0]
+    path_to_db = args.path_to_db[0]
+    return port, userlogin, secret_key, session_name, path_to_db
 
 
 HOST = "127.0.0.1"
-PORT, USER_LOGIN = get_args()
+PORT, USER_LOGIN, SECRET_KEY, SESSION_NAME, PATH_TO_DB = get_args()
+
+
+site_app = flask.Flask(__name__)
+login_manager = LoginManager()
+login_manager.init_app(site_app)
+site_app.config["SECRET_KEY"] = f"{SECRET_KEY}_secret_key"
+site_app.config["SESSION_COOKIE_NAME"] = f"{SESSION_NAME}_session"
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    print("***site_app***", user_id)
     db_sess = db_session.create_session()
-    return db_sess.query(User).get(user_id)
+    user = db_sess.query(User).get(user_id)
+    db_sess.close()
+    return user
 
 
 @site_app.route(f'/{USER_LOGIN}/logout')
 @login_required
 def logout():
-    print(USER_LOGIN)
-    print(f"***{current_user.name.upper()}***")
     logout_user()
     return flask.redirect(f"/{USER_LOGIN}/")
 
@@ -55,6 +59,7 @@ def index():
         news = db_sess.query(News).filter((News.user == current_user) | (News.is_private != 1))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
+    db_sess.close()
     return flask.render_template("index.html",
                                  userlogin=USER_LOGIN,
                                  news=news)
@@ -66,6 +71,7 @@ def login():
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.email == form.email.data).first()
+        db_sess.close()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return flask.redirect(f"/{USER_LOGIN}/")
@@ -90,9 +96,11 @@ def reqister():
                                          userlogin=USER_LOGIN,
                                          message="Пароли не совпадают")
         db_sess = db_session.create_session()
-        if db_sess.query(User).filter(User.email == form.email.data).first():
+        sovp = db_sess.query(User).filter(User.email == form.email.data).first()
+        if sovp:
+            db_sess.close()
             return flask.render_template('register.html',
-                                        title='Регистрация',
+                                         title='Регистрация',
                                          form=form,
                                          userlogin=USER_LOGIN,
                                          message="Такой пользователь уже есть")
@@ -104,6 +112,7 @@ def reqister():
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
+        db_sess.close()
         return flask.redirect(f'/{USER_LOGIN}/login')
     return flask.render_template('register.html',
                                  title='Регистрация',
@@ -117,13 +126,15 @@ def add_news():
     form = NewsForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        news = News()
-        news.title = form.title.data
-        news.content = form.content.data
-        news.is_private = form.is_private.data
-        current_user.news.append(news)
-        db_sess.merge(current_user)
+        news = News(
+            title=form.title.data,
+            content=form.content.data,
+            is_private=form.is_private.data,
+            user_id=current_user.id
+        )
+        db_sess.add(news)
         db_sess.commit()
+        db_sess.close()
         return flask.redirect(f'/{USER_LOGIN}/')
     return flask.render_template('news.html',
                                  title='Добавление новости',
@@ -140,6 +151,7 @@ def edit_news(id):
         news = db_sess.query(News).filter(News.id == id,
                                           News.user == current_user
                                           ).first()
+        db_sess.close()
         if news:
             form.title.data = news.title
             form.content.data = news.content
@@ -156,8 +168,10 @@ def edit_news(id):
             news.content = form.content.data
             news.is_private = form.is_private.data
             db_sess.commit()
+            db_sess.close()
             return flask.redirect(f'/{USER_LOGIN}/')
         else:
+            db_sess.close()
             flask.abort(404)
     return flask.render_template('news.html',
                                  title='Редактирование новости',
@@ -166,10 +180,7 @@ def edit_news(id):
 
 
 def main():
-    if __name__ == "__main__":
-        db_session.global_init("./sites/site3/databases/blogs.db")
-    else:
-        db_session.global_init("../sites/site3/databases/blogs.db")
+    db_session.global_init(PATH_TO_DB)
     site_app.run(host=HOST, port=PORT)
 
 
