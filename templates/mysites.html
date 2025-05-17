@@ -28,9 +28,11 @@
                     <button class="mysite_button" onclick="window.location.href='/site/closesite/{{ project.name }}' ">
                         Закрыть Сайт
                     </button>
-                    <button class="disabled_mysite_button">
-                        Скачать Файлы сайта
+
+                    <button class="mysite_button" onclick="window.location.href='/download/{{ login }}/{{ project.name }}'">
+                        Скачать проект
                     </button>
+
                 </div>
             </div>
         {% endfor %}

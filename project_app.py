@@ -86,6 +86,7 @@ def exit_cleanup(*args):
     print("\nПРОВЕРКА ПРОЦЕССОВ:", SERVER_PROCESS)
     sys.exit(0)
 
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in master_app.config['ALLOWED_EXTENSIONS']
@@ -118,43 +119,40 @@ def check_password(password: str) -> tuple:
         return False, "Длина пароля должна быть в пределах 6-50 символов"
     nums = [str(i) for i in range(0, 10)]
     for num in nums:
+        print(num)
         if num in password:
-            break
+            print("something")
+            return True, None
     else:
         return False, "В пароле должны быть цифры"
-    return True, None
-
-
-def check_form(form: RegisterForm):
-    check_result, check_message = check_password(form.password)
-    if not check_result:
-        return flask.render_template('register.html', title='Регистрация',
-                                     form=form,
-                                     message=check_message)
-    if form.password.data != form.password_again.data:
-        return flask.render_template('register.html', title='Регистрация',
-                                     form=form,
-                                     message="Пароли не совпадают")
-    db_sess = db_session.create_session()
-    if db_sess.query(User).filter(User.login == form.login.data).first():
-        return flask.render_template('register.html', title='Регистрация',
-                                     form=form,
-                                     message="Логин занят")
-    if "site" in form.login:
-        return flask.render_template('register.html', title='Регистрация',
-                                     form=form,
-                                     message="Ваш логин не может содержать site")
-    if db_sess.query(User).filter(User.email == form.email.data).first():
-        return flask.render_template('register.html', title='Регистрация',
-                                     form=form,
-                                     message="Уже существует пользователь с такой почтой")
 
 
 @master_app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
     if form.validate_on_submit():
-        check_form(form)
+        check_result, check_message = check_password(form.password.data)
+        if not check_result:
+            return flask.render_template('register.html', title='Регистрация',
+                                         form=form,
+                                         message=check_message)
+        if form.password.data != form.password_again.data:
+            return flask.render_template('register.html', title='Регистрация',
+                                         form=form,
+                                         message="Пароли не совпадают")
+        db_sess = db_session.create_session()
+        if db_sess.query(User).filter(User.login == form.login.data).first():
+            return flask.render_template('register.html', title='Регистрация',
+                                         form=form,
+                                         message="Логин занят")
+        if "site" in form.login.data:
+            return flask.render_template('register.html', title='Регистрация',
+                                         form=form,
+                                         message="Ваш логин не может содержать site")
+        if db_sess.query(User).filter(User.email == form.email.data).first():
+            return flask.render_template('register.html', title='Регистрация',
+                                         form=form,
+                                         message="Уже существует пользователь с такой почтой")
         db_sess = db_session.create_session()
         user = User(
             surname=form.surname.data,
@@ -165,7 +163,6 @@ def reqister():
         )
         user.set_password(form.password.data)
         db_sess.add(user)
-        db_sess.commit()
         user_files = User_files(
             num_projects=0,
             dir_name=form.login.data + "_dir",
@@ -174,7 +171,7 @@ def reqister():
         db_sess.add(user_files)
         db_sess.commit()
         db_sess.close()
-        dir_name = db_sess.query(User_files).filter(User_files.user_id == user.id).first().dir_name
+        dir_name = db_sess.query(User_files).all()[-1].dir_name
         os.mkdir(f"./user_dirs/{dir_name}")
         shutil.copy(os.path.join("db/", "projects.db"), f"./user_dirs/{dir_name}")
         return flask.redirect('/login')
@@ -271,6 +268,16 @@ def hello():
 @master_app.route("/sites")
 def choose_site():
     return flask.render_template("sites.html", title="Сайты")
+
+
+@master_app.route('/download/<string:login_>/<string:project>')
+def download_file(login_, project):
+    file_path = f"user_dirs/{login_}_dir/{project}/{project}.zip"
+    return flask.send_file(
+        file_path,
+        as_attachment=True,
+        download_name=project + ".zip"
+    )
 
 
 @master_app.route("/mysites")
